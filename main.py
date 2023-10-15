@@ -3,50 +3,78 @@ import matplotlib.pyplot as plt
 
 class SinglePerceptronTrainer:
     def __init__(self):
-        self.weight =  0.1  # Initiate with a small random value close to 0
-        self.target = 10
-        self.feature = -0.1
+        self.weight =  [0,0,0] 
+        self.feature = [[0,1,0],[0,0,1],[0,1,1]]
+        self.dotproducts = [0,0,0]
+        self.target = [1,1,0]
+        self.estimates = [0,0,0]
         self.bias = 0.1
         self.rate = 0.1
         self.iterations = []
 
     def weighted_sum(self):
-        z = (self.feature*self.weight) + self.bias 
-        return z
+        dotproduct = [0 for _ in self.feature]
+        for i in range(len(self.feature)):
+            for j in range(len(self.feature[i])):
+                dotproduct[i] += self.feature[i][j] * self.weight[j]  # Calculate weighted sum
+            dotproduct[i] += self.bias  
+            
 
-    def activation_function(self, z):
-        #detta är en steg-funktion den är binär. den kan endast säga ja eller nej dvs. 
-        if z > 0:
-            return 1
-        else:
-            return 0
+        self.dotproducts = dotproduct  # Update class variable
+        return dotproduct
+
+    #steg-funktion. 
+    # def activation_function(self, dotproduct:list):
+    #     #detta är en steg-funktion, ej sigmoid, denna är binär. den kan endast säga 1 eller 0. 
+    #     outputs = []
+    #     for x in dotproduct:
+    #         if x > 0:
+    #             outputs.append(1)
+    #         else:
+    #             outputs.append(0)
+    #     return outputs
     
-    # def activation_function(self,z):
-    #     #denna är en sigmoid activation function, den är bättre för att ge icke-binära resultat
-    #     a = 1/(1 + np.exp(-z))
-    #     return a
+    #Sigmoid funktion. 
+    def activation_function(self,z):
+        outputs = []
+        for x in z: 
+            output = 1/(1 + np.exp(-x))
+            outputs.append(output)
+        return outputs
 
-    def loss_calculation(self):
-        x = self.activation_function(self.weighted_sum())
-        l = 0.5*(self.target - x)**2
-        return l 
+    def loss_calculation(self, outputs:list):
+        losses = []
+        #processar alla outputs från activation.
+        for i in range(len(outputs)):
+            l = 0.5 * (self.target[i] - outputs[i])**2
+            losses.append(l)
+        return losses
     
     def train(self):
-        #dessa 3 listor är till för att kunna visualisera resultatet i pyplot (grafer)
-        self.iterations = list(range(0,10))
-        losses = []
-        estimates = []
-
-        for x in range(0,10):
-            z = self.weighted_sum()
-            y = self.activation_function(z)
-            self.weight = self.weight + self.rate * (self.target - y)*self.feature
-            self.bias = self.bias + self.rate * (self.target - y)
-            losses.append(self.loss_calculation())
-            estimates.append(y)
+        '''
         
-        #returna losses och estimates för visualiseringen 
-        return self.loss_calculation(), self.activation_function(self.weighted_sum()), losses, estimates
+        sätt self.iterations och range till samma.
+        
+        '''
+
+        self.iterations = list(range(1,2000))
+        self.all_losses = []
+        self.all_outputs = []
+
+        for x in range(1, 2000):
+            self.weighted_sum()
+            outputs = self.activation_function(self.dotproducts)
+            losses = self.loss_calculation(outputs)
+            
+            self.all_outputs.append(outputs)  # Store outputs for visualization
+            self.all_losses.append(sum(losses) / len(losses))  # Store average loss for visualization
+            for i in range(len(outputs)):
+                error = self.target[i] - outputs[i]
+                for j in range(len(self.weight)):
+                    self.weight[j] += self.rate * error * self.feature[i][j]
+                self.bias += self.rate * error
+
+        return self.iterations, self.all_losses, self.all_outputs #returnar bara för visualisation
 
     def test(self, new_feature):
         z = (new_feature*self.weight) + self.bias
@@ -55,14 +83,14 @@ class SinglePerceptronTrainer:
 
 ai = SinglePerceptronTrainer()
 
-loss, estimate, losses, estimations = ai.train()
+iterations, losses, outputs = ai.train()
 
-#print ai.test(0.3) kommer ge ungefär 0.9. så om vi säger att 0.3 är en persons längd, så kommer 0.9 vara personens vikt. 
-#modellen har tränats på en person som är 0.2 i höjd och väger 1. så det stämmer bra överens att 0.2 bör ge 0.9. 
+for x in ai.all_outputs:
+    print(x)
 
 #dessa figurer visar att förlusten minskar ju fler iterationer modellen tränas. 
 plt.figure(figsize=(10,5))
-plt.plot(ai.iterations, losses, label='Loss', color='blue')
+plt.plot(iterations, losses, label='Loss', color='blue')
 plt.xlabel('Iterations')
 plt.ylabel('Loss Value')
 plt.title('Loss over Iterations')
@@ -70,27 +98,12 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# Denna visar att estimatet ökar (kommer närare target) ju fler iterationer. 
+# Denna visar att estimatet kommer närare target ju fler iterationer. 
 plt.figure(figsize=(10,5))
-plt.plot(ai.iterations, estimations, label='Estimate', color='red')
+plt.plot(iterations, outputs, label='Estimate', color='red')
 plt.xlabel('Iterations')
 plt.ylabel('Estimate Value')
 plt.title('Estimate over Iterations')
 plt.legend()
 plt.grid(True)
 plt.show()
-
-
-#backward propagation används i neurala nätverk, inte single perceptron
-#men dlda, dadz, dzdw, dldw, dldb, är deriveringar som isåfall skulle behövas. 
-# def backward_propagation(self):
-#     a = self.activation_function()
-#     dlda = 2*(self.target-a)
-#     dadz = a * (1-a)
-#     dzdw = self.feature
-#     dldw = dlda * dadz * dzdw 
-#     dldb = dlda*dadz 
-#     self.bias = self.bias - self.rate * dldb
-#     self.weight = self.weight - self.rate * (dldw)
-#     return 
-
