@@ -22,7 +22,6 @@ class SinglePerceptronTrainer:
         self.dotproducts = dotproduct
         return dotproduct
 
-
     #steg-funktion. 
     def activation_function(self, dotproduct:list):
         #detta är en steg-funktion, ej sigmoid, denna är binär. den kan endast säga 1 eller 0. 
@@ -52,22 +51,20 @@ class SinglePerceptronTrainer:
     
     def train(self):
         '''
-        
-        sätt self.iterations och range till samma.
-        
+        sätt self.iterations och loopen x in range till samma intervall annars buggar plotten
         '''
 
-        self.iterations = list(range(1,20))
-        self.all_losses = []
-        self.all_outputs = []
+        self.iterations = list(range(1,20)) 
+        self.all_losses = [] 
+        self.all_outputs = [] 
 
         for x in range(1, 20):
             self.weighted_sum(self.feature)
-            outputs = self.activation_function(self.dotproducts)
-            losses = self.loss_calculation(outputs)
+            outputs = self.activation_function(self.dotproducts) 
+            losses = self.loss_calculation(outputs) 
             
-            self.all_outputs.append(outputs)  # Store outputs for visualization (plot will show 3 lines)
-            self.all_losses.append(sum(losses) / len(losses))  # Store average loss for visualization (loss shows 1 line representing all 3 estimates)
+            self.all_outputs.append(outputs)  
+            self.all_losses.append(sum(losses) / len(losses))  
             for i in range(len(outputs)):
                 error = self.target[i] - outputs[i]
                 for j in range(len(self.weight)):
