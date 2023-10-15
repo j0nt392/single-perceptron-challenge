@@ -19,8 +19,7 @@ class SinglePerceptronTrainer:
             for j in range(len(features_copy[i])):
                 dotproduct[i] += features_copy[i][j] * self.weight[j]
             dotproduct[i] += self.bias
-        if modify_internal_state:
-            self.dotproducts = dotproduct
+        self.dotproducts = dotproduct
         return dotproduct
 
 
